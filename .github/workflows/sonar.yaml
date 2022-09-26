@@ -1,0 +1,56 @@
+on:
+  workflow_call:
+    inputs:
+      extra_label:
+        required: false
+        default: klever-pipe
+        type: string
+    secrets:
+      git_token:
+        required: true
+      sonar_token:
+        required: true
+jobs:
+  sonar:
+    name: SonarQube Trigger
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+
+      # - name: SonarQube Scan
+      #   uses: sonarsource/sonarqube-scan-action@master
+      #   with:
+      #     args: >
+      #       -Dsonar.projectKey=${{ github.event.repository.name }}
+      #   env:
+      #     SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+      #     SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
+
+      - name: SonarCloud Scan
+        uses: SonarSource/sonarcloud-github-action@master
+        env:
+          GITHUB_TOKEN: ${{ secrets.git_token }}  # Needed to get PR information, if any
+          SONAR_TOKEN: ${{ secrets.sonar_token }}
+
+      - name: Analyze with SonarCloud
+        uses: sonarsource/sonarcloud-github-action@master
+
+        env:
+          SONAR_TOKEN: ${{ secrets.sonar_token }}        
+        with:
+          projectBaseDir: /github/workspace
+          args: >
+            -Dsonar.organization=klever0
+            -Dsonar.projectKey=klever0
+            -Dsonar.python.coverage.reportPaths=coverage.xml
+            -Dsonar.sources=lib/
+            -Dsonar.test.exclusions=tests/**
+            -Dsonar.tests=tests/
+            -Dsonar.verbose=true
+
+
+      
+          
+          

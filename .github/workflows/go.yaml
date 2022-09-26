@@ -1,0 +1,57 @@
+on:
+  workflow_call:
+    inputs:
+      extra_label:
+        required: false
+        default: klever-pipe
+        type: string
+      go_private:
+        required: false
+        type: string
+      with_vendor:
+        description: runs go mod vendor
+        default: true
+        required: false
+        type: boolean
+      with_cache:
+        description: activate the go cache
+        default: true
+        required: false
+        type: boolean
+    secrets:
+      git_user:
+        required: false
+      git_pass:
+        required: false
+jobs:
+  setup:
+    env:
+      USER: ${{ secrets.git_user }}
+      TOKEN: ${{ secrets.git_pass }}
+      GO_PRIVATE: ${{ inputs.go_private }}
+
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Set up Golang
+        uses: actions/setup-go@v3
+        with:
+          go-version: 1.18
+          cache: ${{ inputs.with_cache }}
+
+      - name: Configure git for private modules
+        if: env.TOKEN != ''
+        run: git config --global url."https://${USER}:${TOKEN}@github.com".insteadOf "https://github.com"
+
+      - name: Generate vendor
+        run: go mod vendor
+        if: ${{ inputs.with_vendor }}
+
+      - uses: actions/upload-artifact@v3
+        name: Upload vendor directory
+        with:
+          name: ${{ github.event.repository.name }}-${{ github.sha }}-vendor
+          path: vendor/
+          retention-days: 1

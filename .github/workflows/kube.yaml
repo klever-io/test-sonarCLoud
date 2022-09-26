@@ -1,0 +1,42 @@
+on:
+  workflow_call:
+    inputs:
+      cluster:
+        required: true
+        type: string
+      extra_label:
+        required: false
+        default: klever-pipe
+        type: string
+      registry_name:
+        required: false
+        type: string
+        default: gettyio
+    secrets:
+      kubernetes_credentials:
+        required: true
+jobs:
+  kubernetes:
+    runs-on: ["self-hosted", "${{ inputs.extra_label }}"]
+    steps:
+      - uses: azure/setup-kubectl@v3
+        id: install
+
+      - name: Set image
+        run: |
+          cat <<EOF >> k8s/base/kustomization.yaml
+          images:
+          - name: ${{ github.event.repository.name }}
+            newName: ${{ inputs.registry_name }}/${{ github.event.repository.name }}:${{ github.sha }})
+          EOF
+      - name: Decode kube configuration file
+        run: echo "${{ secrets.kubernetes_credentials }}" | base64 -d > /tmp/config
+
+      - name: Deploy application
+        env:
+          KUBECONFIG: /tmp/config
+        run: kubectl apply -k k8s/${{ github.ref_name }} --context ${{ inputs.cluster }}-${{ github.ref_name }}
+
+      - name: Clean KUBECONFIG file
+        run: rm /tmp/config
+        if: always()

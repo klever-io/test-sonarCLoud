@@ -1,0 +1,53 @@
+on:
+  workflow_call:
+    inputs:
+      extra_label:
+        required: false
+        default: klever-pipe
+        type: string
+    secrets:
+      sonar_token:
+        required: true
+      sonar_host_url:
+        required: true
+jobs:
+  analysis:
+    runs-on: ubuntu-latest
+    env:
+      SONAR_TOKEN: ${{ secrets.sonar_token }}
+      SONAR_HOST_URL: ${{ secrets.sonar_host_url }}
+      GO111MODULE: on
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Set up Golang
+        uses: actions/setup-go@v3
+        with:
+          go-version: 1.18
+
+      - uses: actions/download-artifact@v3
+        with:
+          path: vendor
+          name: ${{ github.event.repository.name }}-${{ github.sha }}-vendor
+
+      - name: Run Gosec Security Scanner
+        uses: securego/gosec@master
+        with:
+          args: '-no-fail --fmt sonarqube --out report.json ./...'
+
+      - name: Run tests
+        run: "go test -p 1 -covermode=atomic -coverprofile coverage.out -v ./..."
+
+      # - name: SonarQube Go detailed scan
+      #   uses: sonarsource/sonarqube-scan-action@master
+      #   with:
+      #     args: >
+      #       -Dsonar.projectKey=${{ github.event.repository.name }}
+      #       -Dsonar.exclusions=**/*.json,**/*.xml,**/*_test.go,coverage.out
+      #       -Dsonar.test.inclusions="**/*_test.go"
+      #       -Dsonar.go.coverage.reportPaths=coverage.out
+      #       -Dsonar.externalIssuesReportPaths="report.json"
+      #       -Dsonar.go.golangci-lint.reportPaths="report.xml"
+      #       -Dsonar.branch.name=${{ github.ref_name }}
+        
