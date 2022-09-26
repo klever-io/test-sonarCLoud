@@ -1,5 +1,7 @@
 # Logging
 
+[![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=sonarCloud1&metric=alert_status)](https://sonarcloud.io/summary/new_code?id=sonarCloud1)
+
 A gRPC Server that uses a lib from **kloud-sdk** for **logging**
 
 ## Library
