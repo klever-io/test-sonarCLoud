@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
 jobs:
   config:
-    uses: klever-io/workflow-calls/.github/workflows/go-setup.yaml@master
+    uses: klever-io/test-sonarCloud/.github/workflows/go-setup.yaml@master
     with:
       with_cache: true
     secrets:
@@ -12,7 +12,7 @@ jobs:
       git_pass: ${{ secrets.GIT_PASS }}
 
   ci:
-    uses: klever-io/workflow-calls/.github/workflows/go-ci.yaml@master
+    uses: klever-io/test-sonarCloud/.github/workflows/go-ci.yaml@master
     secrets:
       sonar_token: ${{ secrets.SONAR_TOKEN }}
       sonar_host_url: ${{ secrets.SONAR_HOST_URL }}
