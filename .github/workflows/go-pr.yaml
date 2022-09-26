@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
 jobs:
   config:
-    uses: klever-io/test-sonarCloud/.github/workflows/go-setup.yaml@master
+    uses: klever-io/test-sonarCloud/.github/workflows/go.yaml@master
     with:
       with_cache: true
     secrets:
